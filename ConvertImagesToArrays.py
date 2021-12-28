@@ -31,7 +31,8 @@ a_file = open("plains.txt", "w")
 for i in range(len(saved_arrays)):
     temp_sum = sum(saved_arrays[i])
     saved_arrays[i] = saved_arrays[i]/temp_sum
-for row in saved_arrays:
-    print(sum(row))
-    np.savetxt(a_file, row)
-a_file.close()
+#for row in saved_arrays:
+#    print(sum(row))
+#    np.savetxt(a_file, row)
+#a_file.close()
+np.save('image_array.npy', saved_arrays)
