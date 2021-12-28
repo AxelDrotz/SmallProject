@@ -25,7 +25,7 @@ for k in range(1,801):
         for c in range(col,col+50):
             v.append(image_array[c][r])
     saved_arrays.append(v)
-a_file = open("plains.txt", "w")
+#a_file = open("plains.txt", "w")
 
 #Normalizing data is this necessary????
 for i in range(len(saved_arrays)):
@@ -35,4 +35,5 @@ for i in range(len(saved_arrays)):
 #    print(sum(row))
 #    np.savetxt(a_file, row)
 #a_file.close()
+print(len(saved_arrays))
 np.save('image_array.npy', saved_arrays)
