@@ -4,6 +4,7 @@ import random
 from sklearn.decomposition import PCA
 from sklearn import preprocessing
 
+file = np.load("plains.npy")
 
 """
 dataMatrix is a m x n matrix
