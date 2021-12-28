@@ -24,9 +24,10 @@ for k in range(1,801):
     for r in range(row,row+50):
         for c in range(col,col+50):
             v.append(image_array[c][r])
-
     saved_arrays.append(v)
 a_file = open("plains.txt", "w")
+
+#Normalizing data is this necessary????
 for i in range(len(saved_arrays)):
     temp_sum = sum(saved_arrays[i])
     saved_arrays[i] = saved_arrays[i]/temp_sum
