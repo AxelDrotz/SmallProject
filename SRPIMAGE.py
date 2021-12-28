@@ -9,4 +9,4 @@ for i in k:
     matrices.append(numpy.zeros((d,i)))
 
 for p in matrices:
-    
+    print("HEJHEJ")
