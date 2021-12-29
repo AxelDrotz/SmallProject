@@ -2,7 +2,7 @@ import numpy
 import math
 d = 2500
 
-k = [1,2,4,10,20,100,200,300,500,800]
+k = [1,2]
 
 #store matrices
 matrices = []
@@ -27,26 +27,36 @@ for rows in k:
     t+=1
 
 R = matrices
-print(R)
-print(len(R[0]))
+
+
 X = numpy.load('image_array.npy')
+print(X.shape)
 xt =X.transpose()
 XRP = []
-
+print(xt.shape)
 for i in R:
     XRPtemp = numpy.matmul(i,xt)
     XRP.append(XRPtemp)
-print(XRP)
+
 #Euclidean distance
 #|| x1 -x2|| approximated by sqrt(d/k)||Rx1-Rx2|| where x1 and x2 are vectors
+
+#X is an NxD size matrix (800x2500)
+#Xt is DxN (2500x 800)
+#R is a list of kxN size, (kx2500)
+#XRP is a list of kXn (kx800)
+answers = numpy.zeros((800,800))
+for i in range(0,800,1):
+    for j in range(0,800,1):
+        if i ==j:
+            pass
+        elif answers[i][j] != 0:
+            pass
+        else:
+            pass
+            #take each row of XRP it is RxXt
+
 ans1 = numpy.sqrt(numpy.matmul(numpy.subtract(X[0],X[1]), numpy.subtract(X[0],X[1])))
-print(ans1)
-print(R[0])
-print(len(X))
-print(len(X[0]))
-print(X)
-print((R[0]))
 j = numpy.sqrt(d/k[0])
 p = numpy.subtract(numpy.matmul(R[1],X[0]), numpy.matmul(R[1],X[1]))
 ans2 = j*numpy.sqrt(numpy.matmul(p,p))
-print(ans2)
