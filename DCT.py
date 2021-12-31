@@ -3,72 +3,47 @@ import numpy as np
 m = 50
 n = 50
 
+section_size = 10
 
-def dct(matrix):
-    """Finds the discrete cosine transform of an array."""
+N = n // section_size
 
-    transformed_matrix = np.zeros((n, m))
 
-    for i in range(m):
-        for j in range(n):
+def create_T():
+    """Creates the basis vectors."""
+    T = np.zeros((N, N))
+
+    for i in range(N):
+        for j in range(N):
             if i == 0:
-                ci = 1/np.sqrt(m)
+                T[i][j] = 1/np.sqrt(N)
             else:
-                ci = np.sqrt(2/m)
-            if j == 0:
-                cj = 1/np.sqrt(n)
-            else:
-                cj = np.sqrt(2/n)
-
-            summation = 0
-
-            for k in range(m):
-                for l in range(n):
-                    signal = matrix[k][l] \
-                             * np.cos((2*k + 1) * i * np.pi / (2*m)) \
-                             * np.cos((2*l + 1) * j * np.pi / (2*n))
-                    summation += signal
-
-            transformed_matrix[i][j] = ci * cj * summation
-
-    return transformed_matrix
-
-def inv_dct(matrix):
-    """Performs the inverse discrete cosine transform on a matrix in the cosine-space."""
-
-    inv_transformed_matrix = np.zeros((n, m))
-
-    for i in range(m):
-        for j in range(n):
-            if i == 0:
-                ci = 1/np.sqrt(m)
-            else:
-                ci = np.sqrt(2/m)
-            if j == 0:
-                cj = 1/np.sqrt(n)
-            else:
-                cj = np.sqrt(2/n)
-
-            summation = 0
-
-            for k in range(m):
-                for l in range(n):
-                    signal = matrix[k][l] \
-                             * np.cos((2*k + 1) * i * np.pi / (2*m)) \
-                             * np.cos((2*l + 1) * j * np.pi / (2*n))
-                    summation += signal
-
-            inv_transformed_matrix[i][j] = ci * cj * summation
-
-    return inv_transformed_matrix
-
-
-
+                T[i][j] = np.sqrt(2/N) * np.cos((2*j + 1) * i * np.pi / (2*N))
+    return T
 
 
 def main():
-    matrix = np.ones((n, m))
-    DCT = dct(matrix)
+    # Importing the data:
+    vector_vals = np.load('datafile_name')
+    pic_matrix = np.reshape(vector_vals, (n, m))
+
+    # Create the basis vectors:
+    T = create_T()
+
+    # Center data around 0:
+    M = pic_matrix - 0.5
+
+    # Create sub_matrices:
+    blocks = np.zeros((N, N))
+    Ds = blocks.copy()
+
+    for i in range(N):
+        for j in range(N):
+            blocks[i][j] = M[i*section_size:(i+1)*section_size, j*section_size:(j+1)*section_size].copy()
+            Ds[i][j] = np.matmul(T, np.matmul(blocks[i][j], T.transpose()))
+
+    # We now have the blocks in cosine-space. We now need the quantization matrix.
+
+
     np.save('transformed_matrix', DCT)
 
 if __name__ == __main__:
