@@ -7,6 +7,7 @@ from sklearn import preprocessing
 dataMatrix = np.load("image_array.npy")
 
 A = dataMatrix
+#A = np.array([[1,2,3], [4,5,6], [7,8,9]]) #Test Matrix
 # Standardizing
 A = (A - np.mean(A)) / np.std(A)
 
@@ -33,4 +34,16 @@ print(dataMatrix2)
 # transform
 T = U.dot(Sigma)
 # or T = A.dot(VT.T)
-print(T)
+print(T, T.shape)
+
+
+for k in range(1,801,20):
+    n_elements = k
+    Sigma = Sigma[:, :n_elements]
+    VT = VT[:n_elements, :]
+    # The reconstruction of dataMatrix, is it the same?
+    dataMatrix2 = U.dot(Sigma.dot(VT))
+    # transform
+    T = U.dot(Sigma)
+
+    
