@@ -26,9 +26,12 @@ def main():
     # https://www.researchgate.net/figure/Labelling-of-DCT-coefficients-of-5x5-image-block_fig1_224401255:
     Q = np.matrix([[0, 1, 5, 6, 14], [2, 4, 7, 13, 15], [3, 8, 12, 16, 21], [9, 11, 17, 20, 22], [10, 18, 19, 23, 24]])
 
+    # Output form:
+    output = np.zeros((n, m))
+
 
     # Importing the data:
-    vector_vals = np.load('datafile_name')
+    vector_vals = np.load('image_array.npy')
     pic_matrix = np.reshape(vector_vals, (n, m))
 
     # Create the basis vectors:
@@ -60,9 +63,21 @@ def main():
 
             Ns[i][j] = round(np.matmul(T.transpose(), np.matmul(Rs[i][j], T))) + 0.5
 
+
+    # We can now reconstruct the image:
+
+    for i in range(N):
+        for j in range(N):
+            for iprim in range(section_size):
+                for jprim in range(section_size):
+                    output[(i*section_size) + iprim][(j*section_size) + jprim] = Ns[i][j][iprim][section_size]
+
+    print(output)
+
+
     
 
     np.save('transformed_matrix', DCT)
 
-if __name__ == __main__:
+if __name__ == "__main__":
     main()
