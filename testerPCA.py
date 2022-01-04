@@ -1,28 +1,21 @@
 import pandas as pd
 import numpy as np
 import random
+import pylab
 import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
+from sklearn.decomposition import TruncatedSVD
 from sklearn import preprocessing
 import time
 
 def PCA(A, k):
-    U, s, VT = np.linalg.svd(A)
-    # create m x n Sigma matrix
-    Sigma = np.zeros((A.shape[0], A.shape[1]))
-    # populate Sigma with n x n diagonal matrix
-    Sigma[:A.shape[0], :A.shape[0]] = np.diag(s)
-    Sigma = Sigma[:, :k]
-    VT = VT[:k, :]
-    # The reconstruction of dataMatrix, is it the same?
-    dataMatrix2 = U.dot(Sigma.dot(VT))
-    # transform
-    R_matrix = U.dot(Sigma)
-    print("R_matrix:", R_matrix, "with shape:", R_matrix.shape)
+    svd = TruncatedSVD(n_components=k, random_state=99)
+
+    R_matrix = np.transpose(svd.fit_transform(A))
+    print("R_matrix", R_matrix)
     return R_matrix
 
 def pca_error(x_matrix, N, d, k):
-    average_error = 0
+    pca_average_error = 0
     pairs = []
 
     # Call PCA and observe the computation time
@@ -54,10 +47,9 @@ def pca_error(x_matrix, N, d, k):
     return pca_average_error/100, time_elapsed
 
 
-def pca_test(matrix, dim):
+def pca_test(matrix, dim, timeList):
     pca_error_res = np.zeros(len(dim))
     d, N = matrix.shape
-    timeList = []
 
     for i in range(len(dim)):
         print(dim[i])
@@ -70,21 +62,27 @@ def pca_test(matrix, dim):
 
 dataMatrix = np.load("normalized_array.npy").transpose()
 print("datamatrix:", dataMatrix, dataMatrix.shape)
+
+timeList = []
 k_dimensions = [1,2,3,4,5,6,7,8,9,10,20,30,40,50,60,70,80,90,100,150,200,250,300,400,500,750]
-pca_error_results, time = pca_test(dataMatrix, k_dimensions)
+pca_error_results, time = pca_test(dataMatrix, k_dimensions, timeList)
 print(pca_error_results)
 
-fig, ax = plt.subplots(1,2)
-ax.plot(k_dimensions, pca_error_results)
-ax.xlabel('Reduced dim. of data')
-ax.ylabel('computation time')
-ax.title('Error using PCA')
+plt.plot(k_dimensions, pca_error_results)
+plt.xlabel('Reduced dim. of data')
+plt.ylabel('computation time')
+plt.title('Error using PCA')
 plt.show()
 
-np.save("pca_error_results", pca_error_results)
+fig = plt.figure()
+ax = fig.add_subplot(2, 1, 1)
+line, = ax.plot(pca_error_results, k_dimensions)
+ax.set_yscale('log')
+pylab.show()
 
+#np.save("pca_error_results", pca_error_results)
 
-plt.plot(kList, timeList)
+plt.plot(k_dimensions, timeList)
 plt.xlabel('Reduced dim. of data')
 plt.ylabel('computation time')
 plt.title('Computation time for PCA')
