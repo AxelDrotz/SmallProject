@@ -1,23 +1,16 @@
 import pandas as pd
 import numpy as np
 import random
+import pylab
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn import preprocessing
+
 import time
 
 def PCA(A, k):
-    U, s, VT = np.linalg.svd(A)
-    # create m x n Sigma matrix
-    Sigma = np.zeros((A.shape[0], A.shape[1]))
-    # populate Sigma with n x n diagonal matrix
-    Sigma[:A.shape[0], :A.shape[0]] = np.diag(s)
-    Sigma = Sigma[:, :k]
-    VT = VT[:k, :]
-    # The reconstruction of dataMatrix, is it the same?
-    dataMatrix2 = U.dot(Sigma.dot(VT))
-    # transform
-    R_matrix = U.dot(Sigma)
+    pca = PCA(n_components=k)
+    R_matrix = pca.fit_transform(A)
     print("R_matrix:", R_matrix, "with shape:", R_matrix.shape)
     return R_matrix
 
