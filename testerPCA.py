@@ -3,15 +3,15 @@ import numpy as np
 import random
 import pylab
 import matplotlib.pyplot as plt
-from sklearn.decomposition import TruncatedSVD
+from sklearn.decomposition import PCA
 from sklearn import preprocessing
+
 import time
 
 def PCA(A, k):
-    svd = TruncatedSVD(n_components=k, random_state=99)
-
-    R_matrix = np.transpose(svd.fit_transform(A))
-    print("R_matrix", R_matrix)
+    pca = PCA(n_components=k)
+    R_matrix = pca.fit_transform(A)
+    print("R_matrix:", R_matrix, "with shape:", R_matrix.shape)
     return R_matrix
 
 def pca_error(x_matrix, N, d, k):
@@ -52,7 +52,7 @@ def pca_test(matrix, dim, timeList):
     d, N = matrix.shape
 
     for i in range(len(dim)):
-        print(dim[i])
+        print("k", dim[i])
         k=dim[i]
         pca_error_res[i], elapsed_time = pca_error(matrix, N, d, k)
         timeList.append(elapsed_time)
@@ -66,7 +66,7 @@ print("datamatrix:", dataMatrix, dataMatrix.shape)
 timeList = []
 k_dimensions = [1,2,3,4,5,6,7,8,9,10,20,30,40,50,60,70,80,90,100,150,200,250,300,400,500,750]
 pca_error_results, time = pca_test(dataMatrix, k_dimensions, timeList)
-print(pca_error_results)
+print("pca_error_results:", pca_error_results)
 
 plt.plot(k_dimensions, pca_error_results)
 plt.xlabel('Reduced dim. of data')
@@ -74,12 +74,13 @@ plt.ylabel('computation time')
 plt.title('Error using PCA')
 plt.show()
 
+"""
 fig = plt.figure()
 ax = fig.add_subplot(2, 1, 1)
 line, = ax.plot(pca_error_results, k_dimensions)
 ax.set_yscale('log')
 pylab.show()
-
+"""
 #np.save("pca_error_results", pca_error_results)
 
 plt.plot(k_dimensions, timeList)
