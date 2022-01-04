@@ -1,29 +1,28 @@
 import pandas as pd
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn import preprocessing
+import time
 
-dataMatrix = np.load("image_array.npy")
+dataMatrix = np.load("normalized_array.npy")
 
 A = dataMatrix
 #A = np.array([[1,2,3], [4,5,6], [7,8,9]]) #Test Matrix
-# Standardizing
-A = (A - np.mean(A)) / np.std(A)
 
-print("Standardized:", A)
+#Standardize
+#A = (A - np.mean(A)) / np.std(A)
+
+print("Normalized:", A)
 print("DataMatrix has the shape:", A.shape)
 
 """
 dataMatrix is a n x d matrix
 U = nxn matrix where the coulmns are eigenvectors
 """
-U, s, VT = np.linalg.svd(A)
 
-# create m x n Sigma matrix
-Sigma = np.zeros((A.shape[0], A.shape[1]))
-# populate Sigma with n x n diagonal matrix
-Sigma[:A.shape[0], :A.shape[0]] = np.diag(s)
+"""
 # Select eigenvectors for reduction, n_elements is the new dimension
 n_elements = 2
 Sigma = Sigma[:, :n_elements]
@@ -35,15 +34,32 @@ print(dataMatrix2)
 T = U.dot(Sigma)
 # or T = A.dot(VT.T)
 print(T, T.shape)
+"""
 
+timeList = []
+kList = list(range(2,801))
 
-for k in range(1,801,20):
-    n_elements = k
-    Sigma = Sigma[:, :n_elements]
-    VT = VT[:n_elements, :]
+# For different dimension reductions k (2500 is the original dimension)
+for k in kList:
+    time_start = time.time()
+    U, s, VT = np.linalg.svd(A)
+    # create m x n Sigma matrix
+    Sigma = np.zeros((A.shape[0], A.shape[1]))
+    # populate Sigma with n x n diagonal matrix
+    Sigma[:A.shape[0], :A.shape[0]] = np.diag(s)
+    Sigma = Sigma[:, :k]
+    VT = VT[:k, :]
     # The reconstruction of dataMatrix, is it the same?
     dataMatrix2 = U.dot(Sigma.dot(VT))
     # transform
     T = U.dot(Sigma)
+    time_elapsed = (time.time() - time_start)
+    timeList.append(time_elapsed)
+    print(T, T.shape, "where k=", k)
 
-    
+print(timeList)
+plt.plot(kList, timeList)
+plt.xlabel('Reduced dim. of data')
+plt.ylabel('computation time')
+plt.title('Computation time for PCA')
+plt.show()
