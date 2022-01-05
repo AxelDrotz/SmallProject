@@ -19,6 +19,9 @@ tf_matrix = sklearn.preprocessing.normalize(tf_matrix,axis=1)
 a = tf_matrix.transpose()
 matrix = a.toarray()
 print(type(matrix))
+matrix2 = matrix[0:5000]
+matrix = matrix2
+print(matrix2.shape)
 for i in range(len(matrix)):
     temp_sum = np.linalg.norm(matrix[i])
     matrix[i] = matrix[i]/temp_sum
