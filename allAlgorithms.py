@@ -22,6 +22,8 @@ def normal_rp(d, k):
 
 def sparse_rp(d, k):
     R = np.zeros((k, d))
+    #R = math.sqrt(3)*(np.random.binomial(1, 1/3, (k, d)))
+
     for row in range(k):
         for column in range(d):
             p = np.random.binomial(1, 2/3)
@@ -40,12 +42,16 @@ def sparse_rp(d, k):
 
 
 def srp_error(x_matrix, N, d, k):
+    run_time = 0
     start = time.time()
     srp_average_error = 0
     pairs = []
     srp_r_matrix = sparse_rp(d, k)
     round = 0
+    end = time.time()
+    r_time = end - start
     while round < 100:
+        start = time.time()
         sample_flag = False
         while not sample_flag:
             i, j = [rnd.randint(0, N-1) for p in range(0, 2)]
@@ -62,18 +68,24 @@ def srp_error(x_matrix, N, d, k):
         srp_xi = np.matmul(srp_r_matrix, xi)
         srp_xj = np.matmul(srp_r_matrix, xj)
         srp_dist = constant*np.linalg.norm(srp_xi-srp_xj)
-        srp_average_error += abs((srp_dist-x_dist)/(x_dist))
-    end = time.time()
-    return srp_average_error/100, end-start
+        srp_average_error += ((srp_dist-x_dist)/(x_dist))
+        end = time.time()
+        run_time += end - start + r_time
+
+    return (srp_average_error/100), run_time/100
 
 
 def rp_error(x_matrix, N, d, k):
+    run_time = 0
     start = time.time()
     rp_average_error = 0
     pairs = []
     rp_r_matrix = normal_rp(d, k)
     round = 0
+    end = time.time()
+    r_time = end - start
     while round < 100:
+        start = time.time()
         sample_flag = False
         while not sample_flag:
             i, j = [rnd.randint(0, N-1) for p in range(0, 2)]
@@ -91,11 +103,12 @@ def rp_error(x_matrix, N, d, k):
         rp_xi = np.matmul(rp_r_matrix, xi)
         rp_xj = np.matmul(rp_r_matrix, xj)
         rp_dist = constant*np.linalg.norm(rp_xi-rp_xj)
-        rp_average_error += abs((rp_dist-x_dist)/(x_dist))
+        rp_average_error += ((rp_dist-x_dist)/(x_dist))
 
         # SPARSE RANDOM PROJECTION
-    end = time.time()
-    return rp_average_error/100, end-start
+        end = time.time()
+        run_time += end - start + r_time
+    return (rp_average_error/100), run_time/100
 
 
 def rp_srp_test(matrix, dim):
@@ -107,9 +120,9 @@ def rp_srp_test(matrix, dim):
     for i in range(len(dim)):
         print(dim[i])
         k = dim[i]
-        rp_error_res[i], rp_time[i] = rp_error(
-            matrix, N, d, k)
         srp_error_res[i], srp_time[i] = srp_error(
+            matrix, N, d, k)
+        rp_error_res[i], rp_time[i] = rp_error(
             matrix, N, d, k)
     return rp_error_res, srp_error_res, rp_time, srp_time
 
@@ -135,15 +148,16 @@ def pca(org_data, custom_k):
 
 
 def pca_error(x_matrix, N, d, k):
+    run_time = 0
     start = time.time()
     pca_average_error = 0
     pairs = []
     pca_matrix = pca(x_matrix, k).transpose()
-    end = time.time()
-    print("PCA MATRIX SHAPE")
-    print(np.shape(pca_matrix))
     round = 0
+    end = time.time()
+    c_time = end - start
     while round < 100:
+        start = time.time()
         sample_flag = False
         while not sample_flag:
             i, j = [rnd.randint(0, N-1) for p in range(0, 2)]
@@ -159,8 +173,10 @@ def pca_error(x_matrix, N, d, k):
         pca_xi = pca_matrix[:, i]
         pca_xj = pca_matrix[:, j]
         pca_x_dist = np.linalg.norm(pca_xi-pca_xj)
-        pca_average_error += abs((pca_x_dist-x_dist)/(x_dist))
-    return pca_average_error/100, end-start
+        pca_average_error += ((pca_x_dist-x_dist)/(x_dist))
+        end = time.time()
+        run_time += end - start + c_time
+    return (pca_average_error/100), run_time/100
 
 
 def pca_test(matrix, dim):
@@ -183,46 +199,43 @@ text = np.load('./ConvertTxtData/textdata.npy')
 print("Image", np.shape(image))
 print("Image Paper", np.shape(imagePaper))
 print("Text", np.shape(text))
-k_dimensions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50,
-                60, 70, 80, 90, 100, 150, 200, 250, 300, 400, 500, 750]
 
+k_dimensions = [2, 10, 50, 100, 250, 500, 750]
 
 print("RANDOM PROJECTIONS")
 rp_error_results, srp_error_results, rp_time, srp_time = rp_srp_test(
     image, k_dimensions)
-plt.plot(k_dimensions, rp_error_results)
-plt.plot(k_dimensions, srp_error_results)
-
-k_dimensions1 = [2, 10, 50, 100, 250, 500, 750]
 print("PCA")
-pca_error_results, pca_time = pca_test(image, k_dimensions1)
+pca_error_results, pca_time = pca_test(image, k_dimensions)
 
+print("RP TIME", np.sum(rp_time))
+print("SRP TIME", np.sum(srp_time))
+print("PCA TIME", np.sum(pca_time))
 fig, axis = plt.subplots(2, 4)
 axis[0, 0].plot(k_dimensions, rp_error_results)
-axis[0, 0].set_title("Random Projection")
+axis[0, 0].set_title("RP")
 axis[0, 1].plot(k_dimensions, srp_error_results)
-axis[0, 1].set_title("Sparse Random Projection")
+axis[0, 1].set_title("SRP")
 axis[1, 0].set_yscale("log")
 axis[1, 0].plot(k_dimensions, rp_time)
-axis[1, 0].set_title("Random Projection Elapsed Time")
+axis[1, 0].set_title("RP Elapsed Time")
 axis[1, 1].set_yscale("log")
 axis[1, 1].plot(k_dimensions, srp_time)
-axis[1, 1].set_title("Sparse Random Projection Elapsed Time")
-axis[0, 2].plot(k_dimensions1, pca_error_results)
+axis[1, 1].set_title("SRP Elapsed Time")
+axis[0, 2].plot(k_dimensions, pca_error_results)
 axis[0, 2].set_title("PCA")
 axis[1, 2].set_yscale("log")
-axis[1, 2].plot(k_dimensions1, pca_time)
+axis[1, 2].plot(k_dimensions, pca_time)
 axis[1, 2].set_title("PCA Elapsed Time")
-
-
 axis[0, 3].plot(k_dimensions, rp_error_results)
 axis[0, 3].plot(k_dimensions, srp_error_results)
-axis[0, 3].plot(k_dimensions1, pca_error_results)
+axis[0, 3].plot(k_dimensions, pca_error_results)
 axis[0, 3].set_title("ALL")
+axis[0, 3].legend(["RP", "SRP", "PCA"])
 axis[1, 3].set_yscale("log")
 axis[1, 3].plot(k_dimensions, rp_time)
 axis[1, 3].plot(k_dimensions, srp_time)
-axis[1, 3].plot(k_dimensions1, pca_time)
+axis[1, 3].plot(k_dimensions, pca_time)
 axis[1, 3].set_title("ALL Elapsed Time")
 axis[1, 3].legend(["RP", "SRP", "PCA"])
 
