@@ -8,10 +8,10 @@ from sklearn import preprocessing
 
 import time
 
-def PCA(A, k):
+def execPCA(A, k):
     pca = PCA(n_components=k)
-    R_matrix = pca.fit_transform(A)
-    print("R_matrix:", R_matrix, "with shape:", R_matrix.shape)
+    R_matrix = pca.fit_transform(A).transpose()
+    #print("R_matrix:", R_matrix, "with shape:", R_matrix.shape)
     return R_matrix
 
 def pca_error(x_matrix, N, d, k):
@@ -20,7 +20,7 @@ def pca_error(x_matrix, N, d, k):
 
     # Call PCA and observe the computation time
     time_start = time.time()
-    r_matrix = PCA(x_matrix, k)
+    r_matrix = execPCA(x_matrix, k)
     time_elapsed = (time.time() - time_start)
 
     round = 0
@@ -32,17 +32,19 @@ def pca_error(x_matrix, N, d, k):
                 pairs.append([i, j])
                 sample_flag = True
                 round += 1
+
         #EXTRACT REFERENCE
-        xi = x_matrix[:, i]
+        xi = x_matrix[:,i]
         xj = x_matrix[:,j]
         x_dist = np.linalg.norm(xi-xj)
 
         # Calculate PCA average error
-        constant = np.sqrt(d/k)
-        pca_xi = np.matmul(r_matrix, xi)
-        pca_xj = np.matmul(r_matrix, xj)
+        constant = 1#*np.sqrt(d/k)
+        pca_xi = r_matrix[:,i]
+        pca_xj = r_matrix[:,j]
         pca_dist = constant*np.linalg.norm(pca_xi-pca_xj)
-        pca_average_error += abs((pca_dist-x_dist)/(x_dist))
+
+        pca_average_error += (pca_dist-x_dist)/(x_dist)
 
     return pca_average_error/100, time_elapsed
 
@@ -64,7 +66,7 @@ dataMatrix = np.load("normalized_array.npy").transpose()
 print("datamatrix:", dataMatrix, dataMatrix.shape)
 
 timeList = []
-k_dimensions = [1,2,3,4,5,6,7,8,9,10,20,30,40,50,60,70,80,90,100,150,200,250,300,400,500,750]
+k_dimensions = [2,3,4,5,6,7,8,9,10,20,30,40,50,60,70,80,90,100,150,200,250,300,400,500,750]
 pca_error_results, time = pca_test(dataMatrix, k_dimensions, timeList)
 print("pca_error_results:", pca_error_results)
 

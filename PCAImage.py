@@ -6,19 +6,26 @@ from sklearn.decomposition import PCA
 from sklearn import preprocessing
 import time
 
-def PCA(A, k):
-    U, s, VT = np.linalg.svd(A)
-    # create m x n Sigma matrix
-    Sigma = np.zeros((A.shape[0], A.shape[1]))
-    # populate Sigma with n x n diagonal matrix
-    Sigma[:A.shape[0], :A.shape[0]] = np.diag(s)
-    Sigma = Sigma[:, :k]
-    VT = VT[:k, :]
-    # The reconstruction of dataMatrix, is it the same?
-    dataMatrix2 = U.dot(Sigma.dot(VT))
-    # transform
-    R_matrix = U.dot(Sigma)
-    print("R_matrix:", R_matrix, "with shape:", R_matrix.shape)
+def execPCA(A, k):
+    #Step1
+    A_meaned = A - np.mean(A , axis = 0)
+
+    #Step2
+    cov_mat = np.cov(A_meaned , rowvar = False)
+
+    #Step3
+    eigen_values , eigen_vectors = np.linalg.eigh(cov_mat)
+
+    #Step4
+    sorted_index = np.argsort(eigen_values)[::-1]
+    sorted_eigenvalue = eigen_values[sorted_index]
+    sorted_eigenvectors = eigen_vectors[:,sorted_index]
+
+    #Step5
+    eigenvector_subset = sorted_eigenvectors[:,0:k]
+
+    #Step6
+    R_matrix = np.dot(eigenvector_subset.transpose() , A_meaned.transpose())#.transpose()
     return R_matrix
 
 def pca_error(x_matrix, N, d, k):
@@ -27,7 +34,7 @@ def pca_error(x_matrix, N, d, k):
 
     # Call PCA and observe the computation time
     time_start = time.time()
-    r_matrix = PCA(x_matrix, k)
+    r_matrix = execPCA(x_matrix, k)
     time_elapsed = (time.time() - time_start)
 
     round = 0
@@ -45,11 +52,12 @@ def pca_error(x_matrix, N, d, k):
         x_dist = np.linalg.norm(xi-xj)
 
         # Calculate PCA average error
-        constant = np.sqrt(d/k)
-        pca_xi = np.matmul(r_matrix, xi)
-        pca_xj = np.matmul(r_matrix, xj)
+        constant = 1#*np.sqrt(d/k)
+        print("r_matrix", r_matrix, r_matrix.shape, "xi", xi, xi.shape)
+        pca_xi = r_matrix[:,i]
+        pca_xj = r_matrix[:,j]
         pca_dist = constant*np.linalg.norm(pca_xi-pca_xj)
-        pca_average_error += abs((pca_dist-x_dist)/(x_dist))
+        pca_average_error += (pca_dist-x_dist)/(x_dist)
 
     return pca_average_error/100, time_elapsed
 
@@ -81,13 +89,6 @@ plt.ylabel('computation time')
 plt.title('Error using PCA')
 plt.show()
 
-"""
-fig = plt.figure()
-ax = fig.add_subplot(2, 1, 1)
-line, = ax.plot(pca_error_results, k_dimensions)
-ax.set_yscale('log')
-pylab.show()
-"""
 #np.save("pca_error_results", pca_error_results)
 
 plt.plot(k_dimensions, timeList)
