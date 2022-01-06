@@ -39,10 +39,9 @@ def pca_error(x_matrix, N, d, k):
         x_dist = np.linalg.norm(xi-xj)
 
         # Calculate PCA average error
-        constant = 1#*np.sqrt(d/k)
         pca_xi = r_matrix[:,i]
         pca_xj = r_matrix[:,j]
-        pca_dist = constant*np.linalg.norm(pca_xi-pca_xj)
+        pca_dist = np.linalg.norm(pca_xi-pca_xj)
 
         pca_average_error += (pca_dist-x_dist)/(x_dist)
 
