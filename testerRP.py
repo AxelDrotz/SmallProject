@@ -11,9 +11,9 @@ import scipy.fftpack as scipy
 import time
 
 
-def normal_rp(matrix, k):
+def normal_rp(d, k):
     mu, sigma = 0, 1
-    R = np.random.normal(mu, sigma, (k, 2500))
+    R = np.random.normal(mu, sigma, (k, d))
     for i in range(len(R)):
         c = np.linalg.norm(R[i])
         R[i] = R[i]/c
@@ -40,11 +40,11 @@ def sparse_rp(d, k):
 
 
 def srp_error(x_matrix, N, d, k):
+    start = time.time()
     srp_average_error = 0
     pairs = []
-    srp_r_matrix = sparse_rp(2500, k)
+    srp_r_matrix = sparse_rp(d, k)
     round = 0
-    start = time.time()
     while round < 100:
         sample_flag = False
         while not sample_flag:
@@ -62,17 +62,17 @@ def srp_error(x_matrix, N, d, k):
         srp_xi = np.matmul(srp_r_matrix, xi)
         srp_xj = np.matmul(srp_r_matrix, xj)
         srp_dist = constant*np.linalg.norm(srp_xi-srp_xj)
-        srp_average_error += abs((srp_dist-x_dist)/(x_dist))
+        srp_average_error += ((srp_dist-x_dist)/(x_dist))
     end = time.time()
     return srp_average_error/100, end-start
 
 
 def rp_error(x_matrix, N, d, k):
+    start = time.time()
     rp_average_error = 0
     pairs = []
-    rp_r_matrix = normal_rp(2500, k)
+    rp_r_matrix = normal_rp(d, k)
     round = 0
-    start = time.time()
     while round < 100:
         sample_flag = False
         while not sample_flag:
@@ -91,7 +91,7 @@ def rp_error(x_matrix, N, d, k):
         rp_xi = np.matmul(rp_r_matrix, xi)
         rp_xj = np.matmul(rp_r_matrix, xj)
         rp_dist = constant*np.linalg.norm(rp_xi-rp_xj)
-        rp_average_error += abs((rp_dist-x_dist)/(x_dist))
+        rp_average_error += ((rp_dist-x_dist)/(x_dist))
 
         # SPARSE RANDOM PROJECTION
     end = time.time()
@@ -115,31 +115,36 @@ def rp_srp_test(matrix, dim):
 
 
 # BUILDING ARRAY OF IMAGES FROM THE PAPER
-Arr = np.array([])
-for image in range(1, 4):
-    print("Image", image)
-    im = Image.open('./Images/13_NaturalImages/' + str(image) + '.tiff')
-    imarray = np.array(im)
-    print(np.shape(imarray))
-    for j in range(0, 3):
-        for i in range(0, 462):
-            array = np.array([])
-            for k in range(0, 50):
-                array = np.append(array, imarray[j+k, i:i+50])
-            Arr = np.append(Arr, array)
-        print("J", j)
-        print(np.shape(Arr))
-Arr = Arr.reshape((2500, 462*3*3))
-print(np.shape(Arr))
-np.save('paper_array.npy', Arr)
+# Arr = np.array([])
+# for image in range(1, 4):
+#     print("Image", image)
+#     im = Image.open('./Images/13_NaturalImages/' + str(image) + '.tiff')
+#     imarray = np.array(im)
+#     print(np.shape(imarray))
+#     for j in range(0, 3):
+#         for i in range(0, 462):
+#             array = np.array([])
+#             for k in range(0, 50):
+#                 array = np.append(array, imarray[j+k, i:i+50])
+#             Arr = np.append(Arr, array)
+#         print("J", j)
+#         print(np.shape(Arr))
+# Arr = Arr.reshape((2500, 462*3*3))
+# print(np.shape(Arr))
+# np.save('paper_array.npy', Arr)
 
 
-# X = np.load('normalized_array.npy').transpose()
+image = np.load('normalized_array.npy').transpose()
+imagePaper = np.load('paper_array.npy')
+text = np.load('./ConvertTxtData/textdata.npy')
+print("Image", np.shape(image))
+print("Image Paper", np.shape(imagePaper))
+print("Text", np.shape(text))
 k_dimensions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50,
                 60, 70, 80, 90, 100, 150, 200, 250, 300, 400, 500, 750]
 
 rp_error_results, srp_error_results, rp_time, srp_time = rp_srp_test(
-    Arr, k_dimensions)
+    imagePaper, k_dimensions)
 
 fig, axis = plt.subplots(2, 2)
 axis[0, 0].plot(k_dimensions, rp_error_results)
