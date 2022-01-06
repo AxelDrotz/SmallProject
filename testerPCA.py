@@ -8,9 +8,9 @@ from sklearn import preprocessing
 
 import time
 
-def PCA(A, k):
+def execPCA(A, k):
     pca = PCA(n_components=k)
-    R_matrix = pca.fit_transform(A)
+    R_matrix = pca.fit_transform(A).transpose()
     print("R_matrix:", R_matrix, "with shape:", R_matrix.shape)
     return R_matrix
 
@@ -20,7 +20,7 @@ def pca_error(x_matrix, N, d, k):
 
     # Call PCA and observe the computation time
     time_start = time.time()
-    r_matrix = PCA(x_matrix, k)
+    r_matrix = execPCA(x_matrix, k)
     time_elapsed = (time.time() - time_start)
 
     round = 0
@@ -39,10 +39,11 @@ def pca_error(x_matrix, N, d, k):
 
         # Calculate PCA average error
         constant = np.sqrt(d/k)
+        #print("r_matrix", r_matrix, r_matrix.shape, "xi", xi, xi.shape)
         pca_xi = np.matmul(r_matrix, xi)
         pca_xj = np.matmul(r_matrix, xj)
         pca_dist = constant*np.linalg.norm(pca_xi-pca_xj)
-        pca_average_error += abs((pca_dist-x_dist)/(x_dist))
+        pca_average_error += (pca_dist-x_dist)/(x_dist)
 
     return pca_average_error/100, time_elapsed
 
