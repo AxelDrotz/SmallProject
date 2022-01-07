@@ -13,7 +13,10 @@ import time
 
 def normal_rp(d, k):
     mu, sigma = 0, 1
-    R = np.random.normal(mu, sigma, (k, d))
+    R = np.zeros((k, d))
+    for row in range(k):
+        for column in range(d):
+            R[row][column] = np.random.normal(mu, sigma)
     for i in range(len(R)):
         c = np.linalg.norm(R[i])
         R[i] = R[i]/c
@@ -23,7 +26,6 @@ def normal_rp(d, k):
 def sparse_rp(d, k):
     R = np.zeros((k, d))
     #R = math.sqrt(3)*(np.random.binomial(1, 1/3, (k, d)))
-
     for row in range(k):
         for column in range(d):
             p = np.random.binomial(1, 2/3)
