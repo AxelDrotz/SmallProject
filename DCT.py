@@ -1,83 +1,93 @@
 import numpy as np
-
-m = 50
-n = 50
-
-section_size = 5
-
-N = n // section_size
+from matplotlib import pyplot as plt
+import time
+import random
 
 
-def create_T():
+def create_T(n, m):
     """Creates the basis vectors."""
-    T = np.zeros((N, N))
+    T = np.zeros((n, m))
 
-    for i in range(N):
-        for j in range(N):
+    for i in range(n):
+        for j in range(m):
             if i == 0:
-                T[i][j] = 1/np.sqrt(N)
+                T[i][j] = 1/np.sqrt(n)
             else:
-                T[i][j] = np.sqrt(2/N) * np.cos((2*j + 1) * i * np.pi / (2*N))
+                T[i][j] = np.sqrt(2/n) * np.cos((2*j + 1) * i * np.pi / (2*n))
     return T
 
 
-def main():
-    # Defining the quantization matrix from
-    # https://www.researchgate.net/figure/Labelling-of-DCT-coefficients-of-5x5-image-block_fig1_224401255:
-    Q = np.matrix([[0, 1, 5, 6, 14], [2, 4, 7, 13, 15], [3, 8, 12, 16, 21], [9, 11, 17, 20, 22], [10, 18, 19, 23, 24]])
+def DCT(T, T_inv, col, origin_dim, current_dim):
+    """Performs a modified DCT on a vector."""
+    data = np.matmul(T, col)
+    for removed_dimension in range(origin_dim - current_dim):
+        data = np.delete(data, data.argmin())
 
-    # Output form:
-    output = np.zeros((n, m))
+    data = np.matmul(T_inv, data)
 
-
-    # Importing the data:
-    vector_vals = np.load('image_array.npy')
-    pic_matrix = np.reshape(vector_vals, (n, m))
-
-    # Create the basis vectors:
-    T = create_T()
-
-    # Center data around 0:
-    M = pic_matrix - 0.5
-
-    # Create sub_matrices:
-    blocks = np.zeros((N, N))
-    Ds = blocks.copy()
-
-    for i in range(N):
-        for j in range(N):
-            blocks[i][j] = M[i*section_size:(i+1)*section_size, j*section_size:(j+1)*section_size].copy()
-            Ds[i][j] = np.matmul(T, np.matmul(blocks[i][j], T.transpose()))
-
-    # We now have the blocks in cosine-space, and need to project them on the quantization matrix.
-    Cs = blocks.copy()
-    Rs = blocks.copy()
-    Ns = blocks.copy()
-    for i in range(N):
-        for j in range(N):
-            M = Ds[i][j]
-            for iprim in range(section_size):
-                for jprim in range(section_size):
-                    Cs[i][j][iprim][jprim] = round(M[iprim][jprim]/Q[iprim][jprim])
-                    Rs[i][j][iprim][jprim] = Q[iprim][jprim] * M[iprim][jprim]
-
-            Ns[i][j] = round(np.matmul(T.transpose(), np.matmul(Rs[i][j], T))) + 0.5
+    return data
 
 
-    # We can now reconstruct the image:
+def dct_error(x_matrix, N, d, k, T, T_inv):
+    dct_average_error = 0
+    pairs = []
 
-    for i in range(N):
-        for j in range(N):
-            for iprim in range(section_size):
-                for jprim in range(section_size):
-                    output[(i*section_size) + iprim][(j*section_size) + jprim] = Ns[i][j][iprim][section_size]
+    # Call DCT and observe the computation time
+    time_start = time.time()
+    time_elapsed = (time.time() - time_start)
 
-    print(output)
+    round = 0
+    while round < 400:
+        sample_flag = False
+        while not sample_flag:
+            i, j = [random.randint(0, 799) for p in range(0, 2)]
+            if ([i, j] not in pairs) and ([j, i] not in pairs) and (i != j):
+                pairs.append([i, j])
+                sample_flag = True
+                round += 1
+        # EXTRACT REFERENCE
+        xi = x_matrix[:, i]
+        xj = x_matrix[:, j]
+        x_dist = np.linalg.norm(xi - xj)
+
+        # Calculate DCT average error
+        dct_xi = DCT(T, T_inv, xi, d, k)
+        dct_xj = DCT(T, T_inv, xj, d, k)
+        dct_dist = np.linalg.norm(dct_xi - dct_xj)
+        dct_average_error += (dct_dist - x_dist) / x_dist
+
+    return dct_average_error / 400, time_elapsed
 
 
-    
+def dct_test(matrix, dim, time_list):
+    dct_error_res = np.zeros(len(dim))
+    d, N = matrix.shape
+    T = create_T(d, d)
 
-    np.save('transformed_matrix', DCT)
+    for i in range(len(dim)):
+        print("k", dim[i])
+        k = dim[i]
+        T_inv = create_T(k, k)
+        dct_error_res[i], elapsed_time = dct_error(matrix, N, d, k, T, T_inv)
+        time_list.append(elapsed_time)
 
-if __name__ == "__main__":
-    main()
+    return dct_error_res, time_list
+
+
+time_list = []
+data_matrix = np.load('normalized_array.npy').transpose()
+dims = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60,
+        70, 80, 90, 100, 150, 200, 250, 300, 400, 500, 750]
+dct_error_results, time_list = dct_test(data_matrix, dims, time_list)
+
+plt.plot(dims, dct_error_results)
+plt.xlabel('Reduced dim. of data')
+plt.ylabel('Error')
+plt.title('Error using DCT')
+plt.show()
+
+plt.plot(dims, time_list)
+plt.xlabel('Reduced dim. of data')
+plt.ylabel('computation time')
+plt.title('Computation time for DCT')
+plt.show()
